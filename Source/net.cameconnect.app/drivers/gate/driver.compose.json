@@ -1,0 +1,17 @@
+{
+    "id": "gate",
+    "name": {
+        "en": "Came Gate",
+        "da": "Came port"
+    },
+    "class": "garagedoor",
+    "capabilities": [
+        "windowcoverings_state"
+    ],
+    "pair": [
+        {
+            "id": "list_devices",
+            "template": "list_devices"
+        }
+    ]
+}

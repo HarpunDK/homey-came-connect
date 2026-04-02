@@ -1,0 +1,38 @@
+<svg width="320" height="80" viewBox="0 0 320 80" xmlns="http://www.w3.org/2000/svg">
+  <!-- Baggrund -->
+  <rect x="0" y="0" width="320" height="80" fill="#0F172A" rx="10" />
+
+  <!-- Ikon: “gateway / cloud / signal” -->
+  <g transform="translate(20,18)">
+    <!-- Cloud / boks -->
+    <rect x="0" y="10" width="40" height="28" rx="6" fill="#0EA5E9" />
+    <!-- Signal-buer -->
+    <path d="M 20 6 C 26 6 31 11 31 17" fill="none" stroke="#E0F2FE" stroke-width="2" stroke-linecap="round"/>
+    <path d="M 20 2 C 29 2 37 10 37 19" fill="none" stroke="#E0F2FE" stroke-width="2" stroke-linecap="round" opacity="0.7"/>
+    <!-- Punkt i midten -->
+    <circle cx="20" cy="24" r="4" fill="#E0F2FE" />
+  </g>
+
+  <!-- Tekst: CAME -->
+  <text x="80" y="34"
+        font-family="Segoe UI, system-ui, -apple-system, BlinkMacSystemFont, sans-serif"
+        font-size="24"
+        font-weight="700"
+        fill="#F9FAFB"
+        letter-spacing="3">
+    CAME
+  </text>
+
+  <!-- Tekst: Connect -->
+  <text x="80" y="56"
+        font-family="Segoe UI, system-ui, -apple-system, BlinkMacSystemFont, sans-serif"
+        font-size="16"
+        font-weight="400"
+        fill="#93C5FD"
+        letter-spacing="1">
+    Connect
+  </text>
+
+  <!-- Divider-linje -->
+  <line x1="78" y1="40" x2="200" y2="40" stroke="#1E293B" stroke-width="1" />
+</svg>

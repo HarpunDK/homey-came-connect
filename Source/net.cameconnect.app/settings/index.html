@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <!-- The '/homey.js' script must be included in your settings view to work -->
+    <script type="text/javascript" src="/homey.js" data-origin="settings"></script>
+</head>
+
+<body>
+    <header class="homey-header">
+        <h1 class="homey-title" data-i18n="settings.title">
+            <!-- This will be filled with the translated string with key 'settings.title'. -->
+        </h1>
+        <p class="homey-subtitle" data-i18n="settings.subtitle">
+            <!-- This field will also be translated -->
+        </p>
+    </header>
+    
+    <div>...</div>
+
+    <fieldset class="homey-form-fieldset">
+        <legend class="homey-form-legend">Credentials</legend>
+
+        <div class="homey-form-group">
+            <label class="homey-form-label" for="inputEmail">App token</label>
+            <input class="homey-form-input" id="inputEmail" type="email" value="" placeholder="Email" />
+            <small class="text-muted">Login email</small>
+        </div>
+
+        <div class="homey-form-group">
+            <label class="homey-form-label" for="inputPassword">User Key</label>
+            <input class="homey-form-input" id="inputPassword" type="password" value="" placeholder="Password" />
+            <small class="text-muted">Login password</small>
+        </div>
+
+        
+
+    </fieldset>
+
+    <button id="save" class="homey-button-primary-full">Save changes</button>
+
+    <script type="text/javascript">
+        // a method named 'onHomeyReady' must be present in your code
+        function onHomeyReady(Homey) {
+            // Tell Homey we're ready to be displayed
+            Homey.ready();
+
+            var inputEmailElement     = document.getElementById("inputEmail");
+            var inputPasswordElement  = document.getElementById("inputPassword");
+            
+            var saveElement = document.getElementById("save");
+
+            Homey.get("CameConnectEmail", function (err, token) {
+                if (err) return Homey.alert(err);
+                inputEmailElement.value = token;
+            });
+            
+            Homey.get("CameConnectPassword", function (err, userKey) {
+                if (err) return Homey.alert(err);
+                inputPasswordElement.value = userKey;
+            });
+
+            
+            saveElement.addEventListener("click", function (e) {
+                var anySaveErrors = false;
+
+                Homey.set("CameConnectEmail", inputEmailElement.value, function (err) {
+                    if (err) {
+                        anySaveErrors = true;
+                        return Homey.alert(err);
+                    } 
+                });
+
+                Homey.set("CameConnectPassword", inputPasswordElement.value, function (err) {
+                    if (err) {
+                        anySaveErrors = true;
+                        return Homey.alert(err);
+                    } 
+                });
+
+                if (!anySaveErrors)
+                    return Homey.alert("Settings saved. You can close this dialog now. \nPlease restart the Application - for the new settings to take effect.");
+                else
+                    return Homey.alert("Error occured.");
+
+            });
+        }
+    </script>
+</body>
+
+</html>

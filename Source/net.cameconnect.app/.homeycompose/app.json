@@ -1,0 +1,30 @@
+{
+  "id": "net.cameconnect.app",
+  "version": "1.0.0",
+  "compatibility": ">=12.4.0",
+  "sdk": 3,
+  "runtime": "nodejs",
+  "platforms": [
+    "local"
+  ],
+  "name": {
+    "en": "CameConnect"
+  },
+  "description": {
+    "en": "Adds support for CameConnect"
+  },
+  "category": [
+    "appliances"
+  ],
+  "permissions": [],
+  "images": {
+    "small": "/assets/images/small.png",
+    "large": "/assets/images/large.png",
+    "xlarge": "/assets/images/xlarge.png"
+  },
+  "author": {
+    "name": "Kim Kokholm",
+    "email": "kokholm@gmail.com"
+  },
+  "brandColor": "#49a5dd"
+}

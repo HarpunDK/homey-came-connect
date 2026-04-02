@@ -1,0 +1,6 @@
+<script>
+Homey.emit('list_devices', null, function (err, devices) {
+  if (err) return Homey.alert(err);
+  Homey.addDevice(devices);
+});
+</script>
