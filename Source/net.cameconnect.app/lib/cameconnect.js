@@ -118,7 +118,7 @@ module.exports = class CameConnect {
 
   static extractDeviceName(device, fallbackId) {
     if (!device || typeof device !== 'object') return String(fallbackId);
-    return device.name || device.Name || device.AliasName || `CAME ${fallbackId}`;
+    return device.Name;
   }
 
   async ensureLoggedIn() {
@@ -229,6 +229,8 @@ module.exports = class CameConnect {
         const devices = CameConnect.normalizeList(raw);
         if (!devices.length) continue;
 
+        // console.log("API says", "Devices", devices);
+
         const mapped = devices
           .map(device => {
             const id = CameConnect.extractDeviceId(device);
@@ -236,7 +238,7 @@ module.exports = class CameConnect {
 
             return {
               id: String(id),
-              name: CameConnect.extractDeviceName(device, id)
+              name: CameConnect.extractDeviceName(device, id) + ` (${device.ModelName})`
             };
           })
           .filter(Boolean);
