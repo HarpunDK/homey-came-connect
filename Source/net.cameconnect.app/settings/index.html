@@ -33,7 +33,18 @@
             <small class="text-muted">Login password</small>
         </div>
 
+        <div class="homey-form-group">
+            <label class="homey-form-label" for="inputClientId">Client ID</label>
+            <input class="homey-form-input" id="inputClientId" type="text" value="" placeholder="Client ID" />
+            <small class="text-muted">Your application's client ID</small>
+        </div>
+
         
+        <div class="homey-form-group">
+            <label class="homey-form-label" for="inputClientSecret">Client Secret</label>
+            <input class="homey-form-input" id="inputClientSecret" type="password" value="" placeholder="Client Secret" />
+            <small class="text-muted">Your application's client secret</small>
+        </div>
 
     </fieldset>
 
@@ -45,9 +56,11 @@
             // Tell Homey we're ready to be displayed
             Homey.ready();
 
-            var inputEmailElement     = document.getElementById("inputEmail");
-            var inputPasswordElement  = document.getElementById("inputPassword");
-            
+            var inputEmailElement        = document.getElementById("inputEmail");
+            var inputPasswordElement     = document.getElementById("inputPassword");
+            var inputClientIdElement     = document.getElementById("inputClientId");
+            var inputClientSecretElement = document.getElementById("inputClientSecret");
+
             var saveElement = document.getElementById("save");
 
             Homey.get("CameConnectEmail", function (err, token) {
@@ -58,6 +71,16 @@
             Homey.get("CameConnectPassword", function (err, userKey) {
                 if (err) return Homey.alert(err);
                 inputPasswordElement.value = userKey;
+            });
+            
+            Homey.get("CameConnectClientId", function (err, clientId) {
+                if (err) return Homey.alert(err);
+                inputClientIdElement.value = clientId;
+            });
+
+            Homey.get("CameConnectClientSecret", function (err, clientSecret) {
+                if (err) return Homey.alert(err);
+                inputClientSecretElement.value = clientSecret;
             });
 
             
@@ -72,6 +95,20 @@
                 });
 
                 Homey.set("CameConnectPassword", inputPasswordElement.value, function (err) {
+                    if (err) {
+                        anySaveErrors = true;
+                        return Homey.alert(err);
+                    } 
+                });
+
+                Homey.set("CameConnectClientId", inputClientIdElement.value, function (err) {
+                    if (err) {
+                        anySaveErrors = true;
+                        return Homey.alert(err);
+                    } 
+                });
+
+                Homey.set("CameConnectClientSecret", inputClientSecretElement.value, function (err) {
                     if (err) {
                         anySaveErrors = true;
                         return Homey.alert(err);

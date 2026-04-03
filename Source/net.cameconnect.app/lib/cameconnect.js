@@ -8,8 +8,6 @@ module.exports = class CameConnect {
   constructor(homey) {
     this.homey = homey;
     this.baseUrl = 'https://api.cameconnect.net';
-    this.clientId = 'DIN_CLIENT_ID';
-    this.clientSecret = 'DIT_CLIENT_SECRET';
     this.loginInProgress = null;
   }
 
@@ -19,6 +17,14 @@ module.exports = class CameConnect {
 
   get password() {
     return this.homey.settings.get('CameConnectPassword');
+  }
+
+  get clientId() {
+    return this.homey.settings.get('CameConnectClientId');
+  }
+
+  get clientSecret() {
+    return this.homey.settings.get('CameConnectClientSecret');
   }
 
   get accessToken() {
@@ -55,7 +61,7 @@ module.exports = class CameConnect {
   }
 
   async login() {
-    if (!this.email || !this.password) {
+    if (!this.email || !this.password || !this.clientId || !this.clientSecret) {
       throw new CameConnectError('Missing email/password in settings', 'MISSING_CREDENTIALS');
     }
 
