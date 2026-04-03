@@ -22,13 +22,13 @@
         <legend class="homey-form-legend">Credentials</legend>
 
         <div class="homey-form-group">
-            <label class="homey-form-label" for="inputEmail">App token</label>
+            <label class="homey-form-label" for="inputEmail">Email</label>
             <input class="homey-form-input" id="inputEmail" type="email" value="" placeholder="Email" />
             <small class="text-muted">Login email</small>
         </div>
 
         <div class="homey-form-group">
-            <label class="homey-form-label" for="inputPassword">User Key</label>
+            <label class="homey-form-label" for="inputPassword">Password</label>
             <input class="homey-form-input" id="inputPassword" type="password" value="" placeholder="Password" />
             <small class="text-muted">Login password</small>
         </div>
@@ -46,6 +46,12 @@
             <small class="text-muted">Your application's client secret</small>
         </div>
 
+        <div class="homey-form-group">
+            <label class="homey-form-label" for="inputRedirectUri">Redirect URI</label>
+            <input class="homey-form-input" id="inputRedirectUri" type="text" value="" placeholder="https://app.cameconnect.net/role" />
+            <small class="text-muted">Default: https://app.cameconnect.net/role</small>
+        </div>
+
     </fieldset>
 
     <button id="save" class="homey-button-primary-full">Save changes</button>
@@ -60,6 +66,7 @@
             var inputPasswordElement     = document.getElementById("inputPassword");
             var inputClientIdElement     = document.getElementById("inputClientId");
             var inputClientSecretElement = document.getElementById("inputClientSecret");
+            var inputRedirectUriElement  = document.getElementById("inputRedirectUri");
 
             var saveElement = document.getElementById("save");
 
@@ -81,6 +88,11 @@
             Homey.get("CameConnectClientSecret", function (err, clientSecret) {
                 if (err) return Homey.alert(err);
                 inputClientSecretElement.value = clientSecret;
+            });
+
+            Homey.get("CameConnectRedirectUri", function (err, redirectUri) {
+                if (err) return Homey.alert(err);
+                inputRedirectUriElement.value = redirectUri || "https://app.cameconnect.net/role";
             });
 
             
@@ -114,6 +126,17 @@
                         return Homey.alert(err);
                     } 
                 });
+
+                Homey.set("CameConnectRedirectUri", inputRedirectUriElement.value || "https://app.cameconnect.net/role", function (err) {
+                    if (err) {
+                        anySaveErrors = true;
+                        return Homey.alert(err);
+                    } 
+                });
+
+                // Force a clean login after settings change.
+                Homey.set("CameConnectAccessToken", null, function () {});
+                Homey.set("CameConnectRefreshToken", null, function () {});
 
                 if (!anySaveErrors)
                     return Homey.alert("Settings saved. You can close this dialog now. \nPlease restart the Application - for the new settings to take effect.");
