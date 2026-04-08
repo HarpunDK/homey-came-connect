@@ -11,6 +11,34 @@ module.exports = class CameConnect {
     this.baseUrl = 'https://app.cameconnect.net/api';
     this.defaultRedirectUri = 'https://app.cameconnect.net/role';
     this.loginInProgress = null;
+    this.requestTimeoutMs = 9000;
+    this.debugTokenLogged = false;
+  }
+
+  async fetchWithTimeout(url, options = {}, timeoutMs = this.requestTimeoutMs) {
+    if (typeof AbortController !== 'function') {
+      return fetch(url, options);
+    }
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+      return await fetch(url, {
+        ...options,
+        signal: controller.signal
+      });
+    } catch (err) {
+      if (err && err.name === 'AbortError') {
+        throw new CameConnectError(`Request timeout after ${timeoutMs}ms (${url})`, 'REQUEST_TIMEOUT');
+      }
+      if (err && err.code === 'ENOTFOUND') {
+        throw new CameConnectError(`DNS lookup failed for ${url}`, 'NETWORK_DNS');
+      }
+      throw err;
+    } finally {
+      clearTimeout(timeoutId);
+    }
   }
 
   get email() {
@@ -121,8 +149,51 @@ module.exports = class CameConnect {
     return device.Name;
   }
 
+  static toFiniteNumberOrNull(value) {
+    const numeric = Number(value);
+    return Number.isFinite(numeric) ? numeric : null;
+  }
+
+  static extractMovementState(row) {
+    const states = Array.isArray(row && row.States) ? row.States : [];
+
+    // Some installations expose movement data at different state indexes.
+    for (const state of states) {
+      const payload = Array.isArray(state && state.Data)
+        ? state.Data
+        : (Array.isArray(state && state.data) ? state.data : null);
+
+      if (!payload || payload.length < 2) continue;
+
+      const phase = CameConnect.toFiniteNumberOrNull(payload[0]);
+      const position = CameConnect.toFiniteNumberOrNull(payload[1]);
+
+      if (phase !== null && position !== null) {
+        return { phase, position };
+      }
+    }
+
+    const directPhase = CameConnect.toFiniteNumberOrNull(
+      row && (row.Phase ?? row.phase ?? row.State ?? row.state)
+    );
+    const directPosition = CameConnect.toFiniteNumberOrNull(
+      row && (row.Position ?? row.position)
+    );
+
+    return {
+      phase: directPhase,
+      position: directPosition
+    };
+  }
+
   async ensureLoggedIn() {
-    if (this.accessToken) return;
+    if (this.accessToken) {
+      if (!this.debugTokenLogged) {
+        this.homey.log('[CameConnect][DEBUG] Bearer token', `Bearer ${this.accessToken}`);
+        this.debugTokenLogged = true;
+      }
+      return;
+    }
 
     if (!this.loginInProgress) {
       this.loginInProgress = this.login()
@@ -165,7 +236,7 @@ module.exports = class CameConnect {
       password: this.password
     });
 
-    const authCodeRes = await fetch(`${this.baseUrl}/oauth/auth-code?${authCodeParams.toString()}`, {
+    const authCodeRes = await this.fetchWithTimeout(`${this.baseUrl}/oauth/auth-code?${authCodeParams.toString()}`, {
       method: 'POST',
       headers: {
         ...this.buildBasicAuthHeader(),
@@ -190,7 +261,7 @@ module.exports = class CameConnect {
       code_verifier: codeVerifier
     });
 
-    const tokenRes = await fetch(`${this.baseUrl}/oauth/token`, {
+    const tokenRes = await this.fetchWithTimeout(`${this.baseUrl}/oauth/token`, {
       method: 'POST',
       headers: {
         ...this.buildBasicAuthHeader(),
@@ -210,6 +281,8 @@ module.exports = class CameConnect {
 
     this.accessToken = tokenData.access_token;
     this.refreshTokenValue = tokenData.refresh_token || null;
+    this.homey.log('[CameConnect][DEBUG] Bearer token', `Bearer ${this.accessToken}`);
+    this.debugTokenLogged = true;
   }
 
   async refreshToken() {
@@ -268,10 +341,12 @@ module.exports = class CameConnect {
     }
 
     const row = rows[0] || {};
-    const states = Array.isArray(row.States) ? row.States : [];
-    const movementState = states[2] && Array.isArray(states[2].Data) ? states[2].Data : [];
-    const phase = Number.isFinite(Number(movementState[0])) ? Number(movementState[0]) : null;
-    const position = Number.isFinite(Number(movementState[1])) ? Number(movementState[1]) : null;
+    const rowId = row.Id || row.id || row.DeviceId || row.deviceId || null;
+    const onlineRaw = row.Online ?? row.online ?? row.IsOnline ?? row.isOnline ?? null;
+    const isOnline = onlineRaw === null ? null : Boolean(onlineRaw);
+    const movement = CameConnect.extractMovementState(row);
+    const phase = movement.phase;
+    const position = movement.position;
 
     const PHASE_OPEN = 16;
     const PHASE_CLOSED = 17;
@@ -280,6 +355,8 @@ module.exports = class CameConnect {
 
     return {
       raw: row,
+      id: rowId !== null && rowId !== undefined ? String(rowId) : null,
+      isOnline,
       phase,
       position,
       isOpen
@@ -298,13 +375,26 @@ module.exports = class CameConnect {
       throw new CameConnectError(`Unsupported command: ${command}`, 'INVALID_COMMAND');
     }
 
-    return this.request(`/automations/${id}/commands/${commandId}`, {
-      method: 'POST',
-      body: JSON.stringify({})
-    });
+    const path = `/automations/${id}/commands/${commandId}`;
+
+    try {
+      return await this.request(path, {
+        method: 'POST',
+        body: JSON.stringify({})
+      }, true, null, 20000);
+    } catch (err) {
+      if (err && err.code === 'REQUEST_TIMEOUT') {
+        this.homey.log('[CameConnect] Command timeout, retrying once', path);
+        return this.request(path, {
+          method: 'POST',
+          body: JSON.stringify({})
+        }, false, null, 25000);
+      }
+      throw err;
+    }
   }
 
-  async request(path, options = {}, retry = true, query = null) {
+  async request(path, options = {}, retry = true, query = null, timeoutMs = this.requestTimeoutMs) {
     await this.ensureLoggedIn();
 
     const base = `${this.baseUrl}${path}`;
@@ -316,10 +406,20 @@ module.exports = class CameConnect {
       'Authorization': `Bearer ${this.accessToken}`
     };
 
-    const res = await fetch(url, {
-      ...options,
-      headers
-    });
+    let res;
+    try {
+      res = await this.fetchWithTimeout(url, {
+        ...options,
+        headers
+      }, timeoutMs);
+    } catch (err) {
+      if (retry && err && err.code === 'NETWORK_DNS') {
+        this.homey.log('[CameConnect] DNS failure, retrying once');
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        return this.request(path, options, false, query);
+      }
+      throw err;
+    }
 
     if (res.status === 401 && retry) {
       this.homey.log('[CameConnect] 401, trying refresh');

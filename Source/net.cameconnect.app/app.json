@@ -37,7 +37,11 @@
       },
       "class": "garagedoor",
       "capabilities": [
-        "windowcoverings_state"
+        "garagedoor_closed",
+        "alarm_connectivity",
+        "came_device_id",
+        "came_position",
+        "came_phase"
       ],
       "pair": [
         {
@@ -56,5 +60,48 @@
         }
       ]
     }
-  ]
+  ],
+  "capabilities": {
+    "came_device_id": {
+      "type": "string",
+      "title": {
+        "en": "Device ID",
+        "da": "Enheds-ID"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "icon": "/assets/icons/key-duotone-solid-full.svg"
+    },
+    "came_phase": {
+      "type": "number",
+      "title": {
+        "en": "Phase",
+        "da": "Fase"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "step": 1,
+      "icon": "/assets/icons/moon-first-quarter-duotone-thin-full.svg"
+    },
+    "came_position": {
+      "type": "number",
+      "title": {
+        "en": "Position",
+        "da": "Position"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "units": {
+        "en": "%",
+        "da": "%"
+      },
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "icon": "/assets/icons/angle-90-duotone-light-full.svg"
+    }
+  }
 }
