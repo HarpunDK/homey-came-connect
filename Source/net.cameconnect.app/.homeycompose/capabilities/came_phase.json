@@ -1,0 +1,12 @@
+{
+  "type": "number",
+  "title": {
+    "en": "Phase",
+    "da": "Fase"
+  },
+  "getable": true,
+  "setable": false,
+  "uiComponent": "sensor",
+  "step": 1,
+  "icon": "/assets/icons/moon-first-quarter-duotone-thin-full.svg"
+}

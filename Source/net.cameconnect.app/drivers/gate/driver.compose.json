@@ -6,12 +6,26 @@
     },
     "class": "garagedoor",
     "capabilities": [
-        "windowcoverings_state"
+      "garagedoor_closed",
+      "alarm_connectivity",
+      "came_device_id",
+      "came_position",
+      "came_phase"
     ],
     "pair": [
-        {
-            "id": "list_devices",
-            "template": "list_devices"
-        }
-    ]
+    {
+      "id": "list_devices",
+      "template": "list_devices",
+      "navigation": {
+        "next": "add_devices"
+      },
+      "options": {
+        "singular": false
+      }
+    },
+    {
+      "id": "add_devices",
+      "template": "add_devices"
+    }
+  ]
 }

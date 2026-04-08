@@ -12,6 +12,7 @@ module.exports = class GateDriver extends Homey.Driver {
 
   onPairListDevices() {
     return this.api.listDevices().then(devices => {
+      
       return devices.map(d => ({
         name: d.name,
         data: { id: d.id }
