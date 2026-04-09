@@ -26,5 +26,13 @@
     "name": "Kim Kokholm",
     "email": "kokholm@gmail.com"
   },
-  "brandColor": "#49a5dd"
+  "brandColor": "#49a5dd",
+  "contributing": {
+    "donate": {
+      "paypal": {
+        "username": "KimKokholm"
+      }
+    }
+  },
+  "homeyCommunityTopicId": 153569
 }
