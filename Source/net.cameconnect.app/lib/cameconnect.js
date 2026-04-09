@@ -189,7 +189,7 @@ module.exports = class CameConnect {
   async ensureLoggedIn() {
     if (this.accessToken) {
       if (!this.debugTokenLogged) {
-        this.homey.log('[CameConnect][DEBUG] Bearer token', `Bearer ${this.accessToken}`);
+        //this.homey.log('[CameConnect][DEBUG] Bearer token', `Bearer ${this.accessToken}`);
         this.debugTokenLogged = true;
       }
       return;
@@ -281,7 +281,7 @@ module.exports = class CameConnect {
 
     this.accessToken = tokenData.access_token;
     this.refreshTokenValue = tokenData.refresh_token || null;
-    this.homey.log('[CameConnect][DEBUG] Bearer token', `Bearer ${this.accessToken}`);
+    //this.homey.log('[CameConnect][DEBUG] Bearer token', `Bearer ${this.accessToken}`);
     this.debugTokenLogged = true;
   }
 

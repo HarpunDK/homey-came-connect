@@ -76,7 +76,7 @@ module.exports = class GateDevice extends Homey.Device {
         try {
             await this.api.ensureLoggedIn();
             const state = await this.api.getDeviceState(this.getData().id);
-            this.homey.log('[GateDevice] Poll response', toLogString(state));
+            //this.homey.log('[GateDevice] Poll response', toLogString(state));
 
             const isOpen = !!state.isOpen;
             if (this.hasCapability('garagedoor_closed')) {

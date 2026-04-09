@@ -28,12 +28,25 @@
     "email": "kokholm@gmail.com"
   },
   "brandColor": "#49a5dd",
+  "contributing": {
+    "donate": {
+      "paypal": {
+        "username": "KimKokholm"
+      }
+    }
+  },
+  "homeyCommunityTopicId": 153569,
   "drivers": [
     {
       "id": "gate",
       "name": {
         "en": "Came Gate",
         "da": "Came port"
+      },
+      "images": {
+        "small": "/drivers/gate/assets/images/small.png",
+        "large": "/drivers/gate/assets/images/large.png",
+        "xlarge": "/drivers/gate/assets/images/xlarge.png"
       },
       "class": "garagedoor",
       "capabilities": [
