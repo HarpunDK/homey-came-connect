@@ -13,6 +13,43 @@ module.exports = class CameConnect {
     this.loginInProgress = null;
     this.requestTimeoutMs = 9000;
     this.debugTokenLogged = false;
+    this.settingsSnapshotLogged = false;
+  }
+
+  getSettingTrimmed(key) {
+    const value = this.homey.settings.get(key);
+    if (typeof value !== 'string') return value;
+    return value.trim();
+  }
+
+  summarizeSetting(value) {
+    if (value === null || value === undefined) {
+      return {
+        present: false,
+        length: 0,
+        hasLeadingOrTrailingWhitespace: false
+      };
+    }
+
+    const raw = String(value);
+    return {
+      present: true,
+      length: raw.length,
+      hasLeadingOrTrailingWhitespace: raw !== raw.trim()
+    };
+  }
+
+  logSettingsSnapshot(reason = 'runtime') {
+    const summary = {
+      reason,
+      email: this.summarizeSetting(this.homey.settings.get('CameConnectEmail')),
+      password: this.summarizeSetting(this.homey.settings.get('CameConnectPassword')),
+      clientId: this.summarizeSetting(this.homey.settings.get('CameConnectClientId')),
+      clientSecret: this.summarizeSetting(this.homey.settings.get('CameConnectClientSecret')),
+      redirectUri: this.homey.settings.get('CameConnectRedirectUri') || this.defaultRedirectUri
+    };
+
+    this.homey.log('[CameConnect] Settings snapshot', JSON.stringify(summary));
   }
 
   async fetchWithTimeout(url, options = {}, timeoutMs = this.requestTimeoutMs) {
@@ -42,23 +79,23 @@ module.exports = class CameConnect {
   }
 
   get email() {
-    return this.homey.settings.get('CameConnectEmail');
+    return this.getSettingTrimmed('CameConnectEmail');
   }
 
   get password() {
-    return this.homey.settings.get('CameConnectPassword');
+    return this.getSettingTrimmed('CameConnectPassword');
   }
 
   get clientId() {
-    return this.homey.settings.get('CameConnectClientId');
+    return this.getSettingTrimmed('CameConnectClientId');
   }
 
   get clientSecret() {
-    return this.homey.settings.get('CameConnectClientSecret');
+    return this.getSettingTrimmed('CameConnectClientSecret');
   }
 
   get redirectUri() {
-    return this.homey.settings.get('CameConnectRedirectUri') || this.defaultRedirectUri;
+    return this.getSettingTrimmed('CameConnectRedirectUri') || this.defaultRedirectUri;
   }
 
   get accessToken() {
@@ -210,7 +247,13 @@ module.exports = class CameConnect {
   }
 
   async login() {
+    if (!this.settingsSnapshotLogged) {
+      this.logSettingsSnapshot('login-attempt');
+      this.settingsSnapshotLogged = true;
+    }
+
     if (!this.email || !this.password || !this.clientId || !this.clientSecret) {
+      this.logSettingsSnapshot('missing-credentials');
       throw new CameConnectError('Missing credentials in settings', 'MISSING_CREDENTIALS');
     }
 
