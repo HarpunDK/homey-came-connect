@@ -1,0 +1,11 @@
+{
+  "type": "boolean",
+  "title": {
+    "en": "Sequential",
+    "da": "Sekventiel"
+  },
+  "getable": false,
+  "setable": true,
+  "uiComponent": "button",
+  "icon": "/assets/icons/up-down-duotone-thin-full.svg"
+}

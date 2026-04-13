@@ -51,6 +51,11 @@
       "class": "garagedoor",
       "capabilities": [
         "garagedoor_closed",
+        "button_sequential",
+        "button_open",
+        "button_close",
+        "button_partial",
+        "button_stop",
         "alarm_connectivity",
         "came_device_id",
         "came_position",
@@ -75,6 +80,61 @@
     }
   ],
   "capabilities": {
+    "button_close": {
+      "type": "boolean",
+      "title": {
+        "en": "Close",
+        "da": "Luk"
+      },
+      "getable": true,
+      "setable": true,
+      "uiComponent": "button",
+      "icon": "/assets/icons/door-closed-sharp-duotone-thin-full.svg"
+    },
+    "button_open": {
+      "type": "boolean",
+      "title": {
+        "en": "Open",
+        "da": "Abn"
+      },
+      "getable": true,
+      "setable": true,
+      "uiComponent": "button",
+      "icon": "/assets/icons/door-open-sharp-duotone-thin-full.svg"
+    },
+    "button_partial": {
+      "type": "boolean",
+      "title": {
+        "en": "Partial",
+        "da": "Delvis"
+      },
+      "getable": true,
+      "setable": true,
+      "uiComponent": "button",
+      "icon": "/assets/icons/wind-warning-sharp-duotone-thin-full.svg"
+    },
+    "button_sequential": {
+      "type": "boolean",
+      "title": {
+        "en": "Sequential",
+        "da": "Sekventiel"
+      },
+      "getable": false,
+      "setable": true,
+      "uiComponent": "button",
+      "icon": "/assets/icons/up-down-duotone-thin-full.svg"
+    },
+    "button_stop": {
+      "type": "boolean",
+      "title": {
+        "en": "Stop",
+        "da": "Stop"
+      },
+      "getable": false,
+      "setable": true,
+      "uiComponent": "button",
+      "icon": "/assets/icons/circle-stop-duotone-thin-full.svg"
+    },
     "came_device_id": {
       "type": "string",
       "title": {

@@ -1,0 +1,11 @@
+{
+  "type": "boolean",
+  "title": {
+    "en": "Open",
+    "da": "Abn"
+  },
+  "getable": true,
+  "setable": true,
+  "uiComponent": "button",
+  "icon": "/assets/icons/door-open-sharp-duotone-thin-full.svg"
+}

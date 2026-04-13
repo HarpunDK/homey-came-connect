@@ -408,7 +408,9 @@ module.exports = class CameConnect {
 
   async sendCommand(id, command) {
     const commandMap = {
+      sequential: 1,
       open: 2,
+      partial: 4,
       close: 5,
       stop: 129
     };

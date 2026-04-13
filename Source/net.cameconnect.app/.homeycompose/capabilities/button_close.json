@@ -1,0 +1,11 @@
+{
+  "type": "boolean",
+  "title": {
+    "en": "Close",
+    "da": "Luk"
+  },
+  "getable": true,
+  "setable": true,
+  "uiComponent": "button",
+  "icon": "/assets/icons/door-closed-sharp-duotone-thin-full.svg"
+}
