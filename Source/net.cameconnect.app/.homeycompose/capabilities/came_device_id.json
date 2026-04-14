@@ -1,8 +1,7 @@
 {
   "type": "string",
   "title": {
-    "en": "Device ID",
-    "da": "Enheds-ID"
+    "en": "Device ID"
   },
   "getable": true,
   "setable": false,

@@ -1,10 +1,10 @@
 {
   "type": "boolean",
   "title": {
-    "en": "Stop"
+    "en": "Stopped"
   },
-  "getable": false,
-  "setable": true,
-  "uiComponent": "button",
+  "getable": true,
+  "setable": false,
+  "uiComponent": "sensor",
   "icon": "/assets/icons/circle-stop-duotone-thin-full.svg"
 }

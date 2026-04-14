@@ -1,8 +1,7 @@
 {
   "type": "boolean",
   "title": {
-    "en": "Sequential",
-    "da": "Sekventiel"
+    "en": "Sequential"
   },
   "getable": false,
   "setable": true,

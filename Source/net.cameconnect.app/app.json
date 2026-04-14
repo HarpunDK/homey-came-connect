@@ -40,8 +40,7 @@
     {
       "id": "gate",
       "name": {
-        "en": "Came Gate",
-        "da": "Came port"
+        "en": "Came Gate"
       },
       "images": {
         "small": "/drivers/gate/assets/images/small.png",
@@ -51,15 +50,16 @@
       "class": "garagedoor",
       "capabilities": [
         "garagedoor_closed",
-        "button_sequential",
         "button_open",
+        "button_sequential",
         "button_close",
         "button_partial",
         "button_stop",
         "alarm_connectivity",
         "came_device_id",
-        "came_position",
-        "came_phase"
+        "came_primary_code",
+        "came_activity_code",
+        "came_stopped"
       ],
       "pair": [
         {
@@ -83,10 +83,9 @@
     "button_close": {
       "type": "boolean",
       "title": {
-        "en": "Close",
-        "da": "Luk"
+        "en": "Close"
       },
-      "getable": true,
+      "getable": false,
       "setable": true,
       "uiComponent": "button",
       "icon": "/assets/icons/door-closed-sharp-duotone-thin-full.svg"
@@ -94,10 +93,9 @@
     "button_open": {
       "type": "boolean",
       "title": {
-        "en": "Open",
-        "da": "Abn"
+        "en": "Open"
       },
-      "getable": true,
+      "getable": false,
       "setable": true,
       "uiComponent": "button",
       "icon": "/assets/icons/door-open-sharp-duotone-thin-full.svg"
@@ -105,10 +103,9 @@
     "button_partial": {
       "type": "boolean",
       "title": {
-        "en": "Partial",
-        "da": "Delvis"
+        "en": "Partial"
       },
-      "getable": true,
+      "getable": false,
       "setable": true,
       "uiComponent": "button",
       "icon": "/assets/icons/wind-warning-sharp-duotone-thin-full.svg"
@@ -116,8 +113,7 @@
     "button_sequential": {
       "type": "boolean",
       "title": {
-        "en": "Sequential",
-        "da": "Sekventiel"
+        "en": "Sequential"
       },
       "getable": false,
       "setable": true,
@@ -127,30 +123,38 @@
     "button_stop": {
       "type": "boolean",
       "title": {
-        "en": "Stop",
-        "da": "Stop"
+        "en": "Stop"
       },
       "getable": false,
       "setable": true,
       "uiComponent": "button",
       "icon": "/assets/icons/circle-stop-duotone-thin-full.svg"
     },
+    "came_activity_code": {
+      "type": "number",
+      "title": {
+        "en": "Activity Code"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "step": 1,
+      "icon": "/assets/icons/up-down-duotone-thin-full.svg"
+    },
     "came_device_id": {
       "type": "string",
       "title": {
-        "en": "Device ID",
-        "da": "Enheds-ID"
+        "en": "Device ID"
       },
       "getable": true,
       "setable": false,
       "uiComponent": "sensor",
       "icon": "/assets/icons/key-duotone-solid-full.svg"
     },
-    "came_phase": {
+    "came_primary_code": {
       "type": "number",
       "title": {
-        "en": "Phase",
-        "da": "Fase"
+        "en": "Primary Code"
       },
       "getable": true,
       "setable": false,
@@ -158,23 +162,15 @@
       "step": 1,
       "icon": "/assets/icons/moon-first-quarter-duotone-thin-full.svg"
     },
-    "came_position": {
-      "type": "number",
+    "came_stopped": {
+      "type": "boolean",
       "title": {
-        "en": "Position",
-        "da": "Position"
+        "en": "Stopped"
       },
       "getable": true,
       "setable": false,
       "uiComponent": "sensor",
-      "units": {
-        "en": "%",
-        "da": "%"
-      },
-      "min": 0,
-      "max": 100,
-      "step": 1,
-      "icon": "/assets/icons/angle-90-duotone-light-full.svg"
+      "icon": "/assets/icons/circle-stop-duotone-thin-full.svg"
     }
   }
 }
