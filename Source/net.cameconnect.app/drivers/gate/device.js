@@ -11,6 +11,25 @@ function toLogString(value) {
     }
 }
 
+function getIsMoving(state) {
+    const activityCode = Number.isFinite(state.activityCode) ? Math.round(state.activityCode) : null;
+    const phase = Number.isFinite(state.phase) ? Math.round(state.phase) : null;
+
+    if (activityCode !== null) {
+        return activityCode !== 0;
+    }
+
+    if (phase === 32 || phase === 33) {
+        return true;
+    }
+
+    if (phase === 16 || phase === 17 || phase === 19) {
+        return false;
+    }
+
+    return null;
+}
+
 module.exports = class GateDevice extends Homey.Device {
 
     async onInit() {
@@ -25,8 +44,7 @@ module.exports = class GateDevice extends Homey.Device {
         this.burstStableNeeded = 2;
         this.burstStableCount = 0;
         this.burstLastSignature = null;
-        this.pollInProgress = false;        
-        this.stopRequested = false;
+        this.pollInProgress = false;
         // Track current state to prevent redundant commands
         this.lastIsOpen = null;
         this.lastIsClosed = null;
@@ -85,17 +103,6 @@ module.exports = class GateDevice extends Homey.Device {
     executeCommand(command) {
         const id = this.getData().id;
 
-        if (command === 'stop') {
-            this.stopRequested = true;
-        } else {
-            this.stopRequested = false;
-            if (this.hasCapability('came_stopped')) {
-                this.setCapabilityValue('came_stopped', false).catch(err => {
-                    this.error('[GateDevice] Failed to reset came_stopped', err.message || err);
-                });
-            }
-        }
-
         this.api.sendCommand(id, command)
             .then(response => {
                 this.homey.log('[GateDevice] Command response', command, toLogString(response));
@@ -133,7 +140,7 @@ module.exports = class GateDevice extends Homey.Device {
             const primaryCode = Number.isFinite(state.primaryCode) ? Math.round(state.primaryCode) : null;
             const activityCode = Number.isFinite(state.activityCode) ? Math.round(state.activityCode) : null;
             const isClosed = primaryCode === 1 ? true : (primaryCode === 2 ? false : null);
-            const isStopped = this.stopRequested && activityCode === 0;
+            const isMoving = getIsMoving(state);
 
             if (this.hasCapability('garagedoor_closed') && isClosed !== null) {
                 await this.setCapabilityValue('garagedoor_closed', isClosed);
@@ -155,8 +162,8 @@ module.exports = class GateDevice extends Homey.Device {
                 await this.setCapabilityValue('came_activity_code', activityCode);
             }
 
-            if (this.hasCapability('came_stopped')) {
-                await this.setCapabilityValue('came_stopped', isStopped);
+            if (this.hasCapability('came_stopped') && isMoving !== null) {
+                await this.setCapabilityValue('came_stopped', !isMoving);
             }
 
             this.lastIsOpen = null;
