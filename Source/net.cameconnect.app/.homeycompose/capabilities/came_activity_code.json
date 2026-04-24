@@ -1,0 +1,11 @@
+{
+  "type": "number",
+  "title": {
+    "en": "Activity Code"
+  },
+  "getable": true,
+  "setable": false,
+  "uiComponent": "sensor",
+  "step": 1,
+  "icon": "/assets/icons/up-down-duotone-thin-full.svg"
+}

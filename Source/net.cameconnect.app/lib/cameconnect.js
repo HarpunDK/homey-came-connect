@@ -191,6 +191,61 @@ module.exports = class CameConnect {
     return Number.isFinite(numeric) ? numeric : null;
   }
 
+  static normalizeMovementState(phase, position) {
+    const validPhases = new Set([16, 17, 19, 32, 33]);
+    if (phase === null || !validPhases.has(phase)) {
+      return null;
+    }
+
+    if (position !== null && position >= 0 && position <= 100) {
+      return { phase, position };
+    }
+
+    if (phase === 16) {
+      return { phase, position: 100 };
+    }
+
+    if (phase === 17) {
+      return { phase, position: 0 };
+    }
+
+    return { phase, position: null };
+  }
+
+  static extractStateCode(row, commandId, fallbackIndex = null) {
+    const states = Array.isArray(row && row.States) ? row.States : [];
+
+    for (const state of states) {
+      if (CameConnect.toFiniteNumberOrNull(state && state.CommandId) !== commandId) continue;
+
+      const payload = Array.isArray(state && state.Data)
+        ? state.Data
+        : (Array.isArray(state && state.data) ? state.data : null);
+
+      if (!payload || payload.length < 1) continue;
+
+      const code = CameConnect.toFiniteNumberOrNull(payload[0]);
+      if (code !== null) {
+        return Math.round(code);
+      }
+    }
+
+    if (fallbackIndex !== null && states[fallbackIndex]) {
+      const payload = Array.isArray(states[fallbackIndex].Data)
+        ? states[fallbackIndex].Data
+        : (Array.isArray(states[fallbackIndex].data) ? states[fallbackIndex].data : null);
+
+      if (payload && payload.length >= 1) {
+        const code = CameConnect.toFiniteNumberOrNull(payload[0]);
+        if (code !== null) {
+          return Math.round(code);
+        }
+      }
+    }
+
+    return null;
+  }
+
   static extractMovementState(row) {
     const states = Array.isArray(row && row.States) ? row.States : [];
 
@@ -204,9 +259,10 @@ module.exports = class CameConnect {
 
       const phase = CameConnect.toFiniteNumberOrNull(payload[0]);
       const position = CameConnect.toFiniteNumberOrNull(payload[1]);
+      const normalized = CameConnect.normalizeMovementState(phase, position);
 
-      if (phase !== null && position !== null) {
-        return { phase, position };
+      if (normalized) {
+        return normalized;
       }
     }
 
@@ -217,9 +273,9 @@ module.exports = class CameConnect {
       row && (row.Position ?? row.position)
     );
 
-    return {
-      phase: directPhase,
-      position: directPosition
+    return CameConnect.normalizeMovementState(directPhase, directPosition) || {
+      phase: null,
+      position: null
     };
   }
 
@@ -388,6 +444,8 @@ module.exports = class CameConnect {
     const onlineRaw = row.Online ?? row.online ?? row.IsOnline ?? row.isOnline ?? null;
     const isOnline = onlineRaw === null ? null : Boolean(onlineRaw);
     const movement = CameConnect.extractMovementState(row);
+    const primaryCode = CameConnect.extractStateCode(row, 1, 0);
+    const activityCode = CameConnect.extractStateCode(row, 3, 1);
     const phase = movement.phase;
     const position = movement.position;
 
@@ -400,6 +458,8 @@ module.exports = class CameConnect {
       raw: row,
       id: rowId !== null && rowId !== undefined ? String(rowId) : null,
       isOnline,
+      primaryCode,
+      activityCode,
       phase,
       position,
       isOpen
@@ -408,7 +468,9 @@ module.exports = class CameConnect {
 
   async sendCommand(id, command) {
     const commandMap = {
+      sequential: 1,
       open: 2,
+      partial: 4,
       close: 5,
       stop: 129
     };

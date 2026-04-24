@@ -11,6 +11,25 @@ function toLogString(value) {
     }
 }
 
+function getIsMoving(state) {
+    const activityCode = Number.isFinite(state.activityCode) ? Math.round(state.activityCode) : null;
+    const phase = Number.isFinite(state.phase) ? Math.round(state.phase) : null;
+
+    if (activityCode !== null) {
+        return activityCode !== 0;
+    }
+
+    if (phase === 32 || phase === 33) {
+        return true;
+    }
+
+    if (phase === 16 || phase === 17 || phase === 19) {
+        return false;
+    }
+
+    return null;
+}
+
 module.exports = class GateDevice extends Homey.Device {
 
     async onInit() {
@@ -26,36 +45,76 @@ module.exports = class GateDevice extends Homey.Device {
         this.burstStableCount = 0;
         this.burstLastSignature = null;
         this.pollInProgress = false;
-
+        // Track current state to prevent redundant commands
+        this.lastIsOpen = null;
+        this.lastIsClosed = null;
         // Warm up auth in the background so first user action is less likely to time out.
         this.api.ensureLoggedIn().catch(err => {
             this.error('[GateDevice] Initial login failed', err.message || err);
         });
 
-        if (!this.hasCapability('came_phase')) {
+        for (const capabilityId of ['came_phase', 'came_position']) {
+            if (!this.hasCapability(capabilityId)) continue;
+
             try {
-                await this.addCapability('came_phase');
+                await this.removeCapability(capabilityId);
             } catch (err) {
-                this.error('[GateDevice] Failed to add came_phase capability', err.message || err);
+                this.error('[GateDevice] Failed to remove legacy capability', capabilityId, err.message || err);
+            }
+        }
+
+        for (const capabilityId of ['came_primary_code', 'came_activity_code', 'came_stopped']) {
+            if (this.hasCapability(capabilityId)) continue;
+
+            try {
+                await this.addCapability(capabilityId);
+            } catch (err) {
+                this.error('[GateDevice] Failed to add raw status capability', capabilityId, err.message || err);
             }
         }
 
         this.registerCapabilityListener('garagedoor_closed', async value => {
-            const id = this.getData().id;
             const command = value ? 'close' : 'open';
+            this.executeCommand(command);
+        });
 
-            // Do not block the capability listener on network/API latency.
-            this.api.sendCommand(id, command)
-                .then(response => {
-                    this.homey.log('[GateDevice] Command response', command, toLogString(response));
-                    this.startBurstPolling(command);
-                })
-                .catch(err => {
-                    this.error('[GateDevice] Command error', err.message || err);
-                });
+        this.registerActionButton('button_open', 'open');
+        this.registerActionButton('button_close', 'close');
+        this.registerActionButton('button_stop', 'stop');
+        this.registerActionButton('button_sequential', 'sequential');
+        this.registerCapabilityListener('button_partial', async value => {
+            if (value !== true) return;
+            this.runPartialCommand();
         });
 
         this.startPolling();
+    }
+
+    registerActionButton(capabilityId, command) {
+        if (!this.hasCapability(capabilityId)) return;
+
+        this.registerCapabilityListener(capabilityId, async value => {
+            if (value !== true) return;
+
+            this.executeCommand(command);
+        });
+    }
+
+    executeCommand(command) {
+        const id = this.getData().id;
+
+        this.api.sendCommand(id, command)
+            .then(response => {
+                this.homey.log('[GateDevice] Command response', command, toLogString(response));
+                this.startBurstPolling(command);
+            })
+            .catch(err => {
+                this.error('[GateDevice] Command error', err.message || err);
+            });
+    }
+
+    async runPartialCommand() {
+        this.executeCommand('partial');
     }
 
     async startPolling() {
@@ -76,11 +135,15 @@ module.exports = class GateDevice extends Homey.Device {
         try {
             await this.api.ensureLoggedIn();
             const state = await this.api.getDeviceState(this.getData().id);
-            //this.homey.log('[GateDevice] Poll response', toLogString(state));
+            this.homey.log('[GateDevice] Poll response', toLogString(state));
 
-            const isOpen = !!state.isOpen;
-            if (this.hasCapability('garagedoor_closed')) {
-                await this.setCapabilityValue('garagedoor_closed', !isOpen);
+            const primaryCode = Number.isFinite(state.primaryCode) ? Math.round(state.primaryCode) : null;
+            const activityCode = Number.isFinite(state.activityCode) ? Math.round(state.activityCode) : null;
+            const isClosed = primaryCode === 1 ? true : (primaryCode === 2 ? false : null);
+            const isMoving = getIsMoving(state);
+
+            if (this.hasCapability('garagedoor_closed') && isClosed !== null) {
+                await this.setCapabilityValue('garagedoor_closed', isClosed);
             }
 
             if (this.hasCapability('alarm_connectivity') && state.isOnline !== null) {
@@ -91,14 +154,20 @@ module.exports = class GateDevice extends Homey.Device {
                 await this.setCapabilityValue('came_device_id', String(state.id));
             }
 
-            if (this.hasCapability('came_position') && Number.isFinite(state.position)) {
-                const clampedPosition = Math.max(0, Math.min(100, Math.round(state.position)));
-                await this.setCapabilityValue('came_position', clampedPosition);
+            if (this.hasCapability('came_primary_code') && primaryCode !== null) {
+                await this.setCapabilityValue('came_primary_code', primaryCode);
             }
 
-            if (this.hasCapability('came_phase') && Number.isFinite(state.phase)) {
-                await this.setCapabilityValue('came_phase', Math.round(state.phase));
+            if (this.hasCapability('came_activity_code') && activityCode !== null) {
+                await this.setCapabilityValue('came_activity_code', activityCode);
             }
+
+            if (this.hasCapability('came_stopped') && isMoving !== null) {
+                await this.setCapabilityValue('came_stopped', !isMoving);
+            }
+
+            this.lastIsOpen = null;
+            this.lastIsClosed = null;
 
             return state;
         } catch (err) {
@@ -138,10 +207,10 @@ module.exports = class GateDevice extends Homey.Device {
         const state = await this.pollState();
         if (!state) return;
 
-        const signature = `${state.phase}|${state.position}|${state.isOpen}`;
-        const isTerminalPhase = state.phase === 16 || state.phase === 17;
+        const signature = `${state.primaryCode}|${state.activityCode}`;
+        const isStableIdle = state.primaryCode !== null && state.activityCode === 0;
 
-        if (signature === this.burstLastSignature && isTerminalPhase) {
+        if (signature === this.burstLastSignature && isStableIdle) {
             this.burstStableCount += 1;
         } else {
             this.burstStableCount = 0;

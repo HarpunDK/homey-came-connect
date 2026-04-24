@@ -1,8 +1,7 @@
 {
   "type": "number",
   "title": {
-    "en": "Phase",
-    "da": "Fase"
+    "en": "Primary Code"
   },
   "getable": true,
   "setable": false,
